@@ -1,0 +1,12 @@
+/* Animated Counter Styles */
+.animated-counter {
+  display: inline-block;
+  font-weight: bold;
+  color: inherit;
+  transition: color 0.3s ease;
+}
+
+.animated-counter:hover {
+  color: #3b82f6;
+  text-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+}

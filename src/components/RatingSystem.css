@@ -1,0 +1,136 @@
+/* Rating System Styles */
+.rating-system {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.rating-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.rating-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+.rating-average {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rating-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.star {
+  font-size: 20px;
+  color: #ddd;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.star.filled {
+  color: #ffd700;
+}
+
+.star:hover {
+  color: #ffed4e;
+}
+
+.rating-form {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background-color: white;
+}
+
+.rating-input {
+  margin-bottom: 10px;
+}
+
+.rating-input label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #555;
+}
+
+.comment-input {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.rating-submit {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.rating-submit:hover {
+  background-color: #0056b3;
+}
+
+.rating-submit:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.ratings-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.rating-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 10px;
+}
+
+.rating-item:last-child {
+  border-bottom: none;
+}
+
+.rating-user {
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.rating-comment {
+  color: #666;
+  font-style: italic;
+  margin-top: 5px;
+}
+
+.rating-date {
+  font-size: 12px;
+  color: #999;
+  margin-top: 5px;
+}
+
+.no-ratings {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  padding: 20px;
+}
