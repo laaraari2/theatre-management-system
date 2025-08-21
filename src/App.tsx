@@ -124,9 +124,9 @@ function App() {
     setUser(null);
     setUserProfile(null);
 
-    // إعادة تحميل الصفحة للتأكد من التحديث
+    // إعادة تحميل الصفحة للعودة للصفحة الرئيسية
     const basePath = getBasename();
-    window.location.href = basePath + '/login';
+    window.location.href = basePath || '/';
   };
 
 
