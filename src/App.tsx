@@ -36,13 +36,16 @@ function App() {
   // تحديد الـ basename حسب البيئة والـ URL الحالي
   const getBasename = () => {
     const currentPath = window.location.pathname;
+    if (currentPath.startsWith('/theatre-management-system')) {
+      return '/theatre-management-system';
+    }
     if (currentPath.startsWith('/theatre-activities')) {
       return '/theatre-activities';
     }
     if (currentPath.startsWith('/theatre')) {
       return '/theatre';
     }
-    return process.env.NODE_ENV === 'production' ? '/theatre-activities' : '';
+    return process.env.NODE_ENV === 'production' ? '/theatre-management-system' : '';
   };
 
   // مراقبة حالة المصادقة
