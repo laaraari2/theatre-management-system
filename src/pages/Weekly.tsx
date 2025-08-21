@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../pages.css';
 // تم إزالة useLocalStorage لاستخدام Firebase فقط
 import Notification from '../components/Notification';
 import PermissionGuard from '../components/PermissionGuard';
+import { userService } from '../firebase/services';
 
 interface Session {
   time: string;
@@ -18,6 +19,15 @@ interface DaySchedule {
 
 const Weekly: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
+  const currentUser = userService.getCurrentUser();
+  const canModifyProgram = currentUser && userService.hasPermission('canModifyProgram');
+
+  // إيقاف وضع التعديل إذا لم تكن لديك الصلاحيات
+  useEffect(() => {
+    if (isEditMode && !canModifyProgram) {
+      setIsEditMode(false);
+    }
+  }, [canModifyProgram, isEditMode]);
   const [editingSession, setEditingSession] = useState<{dayIndex: number, sessionIndex: number} | null>(null);
   const [notification, setNotification] = useState<{
     message: string;
@@ -411,7 +421,11 @@ const Weekly: React.FC = () => {
             <div className="toolbar-buttons">
               <PermissionGuard requirePermission="canModifyProgram">
                 <button
-                  onClick={() => setIsEditMode(!isEditMode)}
+                  onClick={() => {
+                    if (canModifyProgram) {
+                      setIsEditMode(!isEditMode);
+                    }
+                  }}
                   className={`btn ${isEditMode ? 'btn-warning' : 'btn-primary'}`}
                   title={isEditMode ? 'إنهاء التعديل' : 'تفعيل وضع التعديل'}
                 >
@@ -455,33 +469,37 @@ const Weekly: React.FC = () => {
 
         <div className="weekly-schedule">
           {weeklySchedule
-            .filter(day => day.sessions.length > 0 || isEditMode)
+            .filter(day => day.sessions.length > 0 || (isEditMode && canModifyProgram))
             .map((day) => {
               const originalDayIndex = weeklySchedule.findIndex(d => d.day === day.day);
               return (
                 <div key={originalDayIndex} className="day-schedule">
                   <div className="day-header">
                     <h2 className="day-title">{day.day}</h2>
-                    {isEditMode && (
+                    {isEditMode && canModifyProgram && (
                       <div className="day-actions">
-                        <button
-                          onClick={() => addNewSession(originalDayIndex)}
-                          className="btn btn-small btn-success"
-                          title="إضافة حصة جديدة"
-                        >
-                          ➕ إضافة حصة
-                        </button>
-                        <button
-                          onClick={() => deleteDay(originalDayIndex)}
-                          className="btn btn-small btn-danger"
-                          title="حذف اليوم"
-                        >
-                          🗑️ حذف اليوم
-                        </button>
+                        <PermissionGuard requirePermission="canCreateActivities">
+                          <button
+                            onClick={() => addNewSession(originalDayIndex)}
+                            className="btn btn-small btn-success"
+                            title="إضافة حصة جديدة"
+                          >
+                            ➕ إضافة حصة
+                          </button>
+                        </PermissionGuard>
+                        <PermissionGuard requirePermission="canDeleteActivities">
+                          <button
+                            onClick={() => deleteDay(originalDayIndex)}
+                            className="btn btn-small btn-danger"
+                            title="حذف اليوم"
+                          >
+                            🗑️ حذف اليوم
+                          </button>
+                        </PermissionGuard>
                       </div>
                     )}
                   </div>
-                  {day.sessions.length === 0 && isEditMode ? (
+                  {day.sessions.length === 0 && isEditMode && canModifyProgram ? (
                     <div className="empty-day-message">
                       <p>لا توجد حصص في هذا اليوم</p>
                       <p className="text-muted">اضغط "إضافة حصة" لإضافة حصة جديدة</p>
@@ -504,22 +522,26 @@ const Weekly: React.FC = () => {
                                 <p className="activity-name">{session.activity}</p>
                                 <p className="room-info">📍 {session.room}</p>
                               </div>
-                              {isEditMode && (
+                              {isEditMode && canModifyProgram && (
                                 <div className="session-actions">
-                                  <button
-                                    onClick={() => startEditSession(originalDayIndex, sessionIndex)}
-                                    className="btn btn-small btn-primary"
-                                    title="تعديل"
-                                  >
-                                    ✏️
-                                  </button>
-                                  <button
-                                    onClick={() => deleteSession(originalDayIndex, sessionIndex)}
-                                    className="btn btn-small btn-danger"
-                                    title="حذف"
-                                  >
-                                    🗑️
-                                  </button>
+                                  <PermissionGuard requirePermission="canEditActivities">
+                                    <button
+                                      onClick={() => startEditSession(originalDayIndex, sessionIndex)}
+                                      className="btn btn-small btn-primary"
+                                      title="تعديل"
+                                    >
+                                      ✏️
+                                    </button>
+                                  </PermissionGuard>
+                                  <PermissionGuard requirePermission="canDeleteActivities">
+                                    <button
+                                      onClick={() => deleteSession(originalDayIndex, sessionIndex)}
+                                      className="btn btn-small btn-danger"
+                                      title="حذف"
+                                    >
+                                      🗑️
+                                    </button>
+                                  </PermissionGuard>
                                 </div>
                               )}
                             </>
