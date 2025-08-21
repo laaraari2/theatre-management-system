@@ -58,7 +58,6 @@ const Program: React.FC = () => {
   const canCreateActivities = currentUser && userService.hasPermission('canCreateActivities');
   const canEditActivities = currentUser && userService.hasPermission('canEditActivities');
   const canDeleteActivities = currentUser && userService.hasPermission('canDeleteActivities');
-  const canCreateReports = currentUser && userService.hasPermission('canCreateReports');
 
   // إيقاف وضع التعديل إذا لم تكن لديك الصلاحيات
   useEffect(() => {
