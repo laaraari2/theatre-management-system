@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../pages.css';
 import SearchFilter from '../components/SearchFilter';
@@ -8,6 +8,8 @@ import Notification from '../components/Notification';
 import { useActivities } from '../hooks/useFirebase';
 import type { Activity } from '../types';
 import SpecialReportModal from '../components/SpecialReportModal';
+import PermissionGuard from '../components/PermissionGuard';
+import { userService } from '../firebase/services';
 import { MOROCCAN_MONTHS, MOROCCAN_ACADEMIC_MONTHS } from '../utils/dateConverter';
 import {
   convertArabicToFrenchNumbers,
@@ -50,6 +52,20 @@ const Program: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
+
+  // صلاحيات المستخدم
+  const currentUser = userService.getCurrentUser();
+  const canCreateActivities = currentUser && userService.hasPermission('canCreateActivities');
+  const canEditActivities = currentUser && userService.hasPermission('canEditActivities');
+  const canDeleteActivities = currentUser && userService.hasPermission('canDeleteActivities');
+  const canCreateReports = currentUser && userService.hasPermission('canCreateReports');
+
+  // إيقاف وضع التعديل إذا لم تكن لديك الصلاحيات
+  useEffect(() => {
+    if (isEditMode && !canEditActivities && !canCreateActivities && !canDeleteActivities) {
+      setIsEditMode(false);
+    }
+  }, [canEditActivities, canCreateActivities, canDeleteActivities, isEditMode]);
 
   // استخدام hook الشهور المخصصة
   const {
@@ -736,13 +752,15 @@ const Program: React.FC = () => {
 
         {/* أزرار إدارة البرنامج */}
         <div className="print-export-container">
-          <button
-            onClick={handleAddActivity}
-            className="create-btn"
-            title="إضافة نشاط جديد"
-          >
-            ➕ إضافة نشاط
-          </button>
+          <PermissionGuard requirePermission="canCreateActivities">
+            <button
+              onClick={handleAddActivity}
+              className="create-btn"
+              title="إضافة نشاط جديد"
+            >
+              ➕ إضافة نشاط
+            </button>
+          </PermissionGuard>
 
           {/* تم حذف زر إضافة شهر لتبسيط الواجهة */}
 
@@ -754,20 +772,22 @@ const Program: React.FC = () => {
             📊 التقارير
           </button>
 
-          {activities.length > 0 && (
-            <button
-              onClick={handleClearAllData}
-              className="edit-btn"
-              title="حذف جميع الأنشطة"
-              style={{
-                background: isDeleting ? '#9ca3af' : '#dc2626',
-                cursor: isDeleting ? 'not-allowed' : 'pointer'
-              }}
-              disabled={isDeleting}
-            >
-              {isDeleting ? '⏳ جاري الحذف...' : '🗑️ حذف الكل'}
-            </button>
-          )}
+          <PermissionGuard requirePermission="canDeleteActivities">
+            {activities.length > 0 && (
+              <button
+                onClick={handleClearAllData}
+                className="edit-btn"
+                title="حذف جميع الأنشطة"
+                style={{
+                  background: isDeleting ? '#9ca3af' : '#dc2626',
+                  cursor: isDeleting ? 'not-allowed' : 'pointer'
+                }}
+                disabled={isDeleting}
+              >
+                {isDeleting ? '⏳ جاري الحذف...' : '🗑️ حذف الكل'}
+              </button>
+            )}
+          </PermissionGuard>
 
           {/* مكون PrintExport مدمج */}
           <PrintExport
@@ -813,17 +833,19 @@ const Program: React.FC = () => {
                 ابدأ بإضافة أنشطة جديدة لتنظيم برنامجك المسرحي
               </p>
               {isEditMode && (
-                <button
-                  onClick={() => setShowMonthSelector(true)}
-                  className="btn btn-primary"
-                  style={{
-                    padding: '1rem 2rem',
-                    fontSize: '1.1rem',
-                    borderRadius: '8px'
-                  }}
-                >
-                  ➕ إضافة أول نشاط
-                </button>
+                <PermissionGuard requirePermission="canCreateActivities">
+                  <button
+                    onClick={() => setShowMonthSelector(true)}
+                    className="btn btn-primary"
+                    style={{
+                      padding: '1rem 2rem',
+                      fontSize: '1.1rem',
+                      borderRadius: '8px'
+                    }}
+                  >
+                    ➕ إضافة أول نشاط
+                  </button>
+                </PermissionGuard>
               )}
             </div>
           ) : (
@@ -877,13 +899,15 @@ const Program: React.FC = () => {
                             📖 قراءة التقرير
                           </button>
                         ) : (
-                          <button
-                            onClick={() => handleCreateReport(activity)}
-                            className="create-report-btn"
-                            title="إنشاء تقرير لهذا النشاط"
-                          >
-                            📝 إنشاء تقرير
-                          </button>
+                          <PermissionGuard requirePermission="canCreateReports">
+                            <button
+                              onClick={() => handleCreateReport(activity)}
+                              className="create-report-btn"
+                              title="إنشاء تقرير لهذا النشاط"
+                            >
+                              📝 إنشاء تقرير
+                            </button>
+                          </PermissionGuard>
                         )}
                       </div>
                     </div>
@@ -891,37 +915,43 @@ const Program: React.FC = () => {
                     {/* أزرار الإجراءات */}
                     {isEditMode && (
                       <div className="session-actions">
-                        <button
-                          onClick={() => startEditActivity(activity.id)}
-                          className="btn btn-small btn-primary"
-                          title="تعديل"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          onClick={() => handleDeleteActivity(activity.id)}
-                          className="btn btn-small btn-danger"
-                          title="حذف"
-                        >
-                          🗑️
-                        </button>
+                        <PermissionGuard requirePermission="canEditActivities">
+                          <button
+                            onClick={() => startEditActivity(activity.id)}
+                            className="btn btn-small btn-primary"
+                            title="تعديل"
+                          >
+                            ✏️
+                          </button>
+                        </PermissionGuard>
+                        <PermissionGuard requirePermission="canDeleteActivities">
+                          <button
+                            onClick={() => handleDeleteActivity(activity.id)}
+                            className="btn btn-small btn-danger"
+                            title="حذف"
+                          >
+                            🗑️
+                          </button>
+                        </PermissionGuard>
                       </div>
                     )}
                   </div>
                 ))}
 
                 {isEditMode && (
-                  <div className="add-activity-card">
-                    <button
-                      onClick={() => addActivityToMonth(month)}
-                      className="add-activity-card-btn"
-                      title="إضافة نشاط جديد لهذا الشهر"
-                    >
-                      <div className="add-icon">➕</div>
-                      <div className="add-text">إضافة نشاط جديد</div>
-                      <div className="add-subtext">لشهر {month.split(' ')[0]}</div>
-                    </button>
-                  </div>
+                  <PermissionGuard requirePermission="canCreateActivities">
+                    <div className="add-activity-card">
+                      <button
+                        onClick={() => addActivityToMonth(month)}
+                        className="add-activity-card-btn"
+                        title="إضافة نشاط جديد لهذا الشهر"
+                      >
+                        <div className="add-icon">➕</div>
+                        <div className="add-text">إضافة نشاط جديد</div>
+                        <div className="add-subtext">لشهر {month.split(' ')[0]}</div>
+                      </button>
+                    </div>
+                  </PermissionGuard>
                 )}
               </div>
             </div>
